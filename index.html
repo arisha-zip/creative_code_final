@@ -1,0 +1,463 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Third Places — Map</title>
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <style>
+    :root{
+      --bg:#f6faf5;
+      --panel:#ffffff;
+      --muted:#7d8b82;
+      --pin-park:#8ccbf1;
+      --pin-lib:#a1679c;
+      --pin-other:#f1a897;
+      --header-green:#abbf60;
+    }
+    html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial;background:var(--bg);color:#223}
+    .page{max-width:1800px;margin:0px auto;padding:0px;box-sizing:border-box}
+    /* keep header fixed at top */
+    header{
+      position:sticky;
+      top:0;
+      z-index:1400;
+      display:flex;
+      align-items:center;
+      gap:12px;
+      margin:0;
+      background:var(--header-green);
+      padding:16px;
+      border-radius:0;
+      box-shadow:0 6px 18px rgba(0,0,0,0.06);
+    }
+    .search-wrap{flex:1;display:flex;align-items:center;gap:12px;background:linear-gradient(90deg,#fff,#fbfffb);padding:12px 16px;border-radius:28px;border:2px solid rgba(34,34,34,0.04);box-shadow:0 6px 18px rgba(30,30,30,0.04);position:relative}
+    .search-input{flex:1;border:0;background:transparent;padding:8px;font-size:15px}
+    .search-btn{border-radius:8px;padding:8px 10px;border:0;background:#fff;cursor:pointer}
+    .search-suggestions{position:absolute;left:12px;right:12px;top:100%;margin-top:8px;background:#fff;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.12);max-height:280px;overflow:auto;z-index:1400;font-size:14px}
+    .search-suggestions .item{padding:8px 10px;cursor:pointer;border-bottom:1px solid rgba(0,0,0,0.04)}
+    .search-suggestions .item:last-child{border-bottom:0}
+    .search-suggestions .item:hover,.search-suggestions .item.active{background:rgba(0,0,0,0.03)}
+    .filter-dropdown{position:relative;font-size:13px;margin-left:8px}
+    .filter-btn{background:rgba(255,255,255,0.12);border:0;padding:8px 12px;border-radius:10px;cursor:pointer;color:#122;display:inline-flex;align-items:center;gap:8px}
+    .filter-menu{position:absolute;top:calc(100% + 8px);left:0;min-width:220px;background:#fff;border-radius:10px;padding:8px;box-shadow:0 8px 24px rgba(0,0,0,0.12);display:none;z-index:1200}
+    .filter-menu label{display:flex;gap:8px;align-items:center;padding:8px;border-radius:8px;color:#223;cursor:pointer}
+    .zip-controls{display:flex;gap:8px;align-items:center;margin-left:8px}
+    .logo{width:250px;height:142px;border-radius:10px;display:flex;align-items:center;justify-content:center;overflow:hidden;flex:0 0 180px;transform:translateY(6px)}
+    .main{display:grid;grid-template-columns:1fr 340px;gap:16px}
+    .map-card{background:var(--panel);border-radius:10px;padding:16px;min-height:420px;border:1px dashed rgba(0,0,0,0.06);position:relative;overflow:hidden}
+    #map{position:absolute;left:12px;right:12px;top:12px;bottom:12px;border-radius:6px;background:#eaf5ea}
+    .right-col{display:flex;flex-direction:column;gap:12px}
+    .panel{background:var(--panel);border-radius:10px;padding:12px;border:1px solid rgba(0,0,0,0.04)}
+    .panel h3{margin:0 0 8px 0;font-size:1rem;color:#334}
+    .panel .content{color:var(--muted);font-size:13px;line-height:1.45;min-height:120px}
+    .bottom{display:grid;grid-template-columns:320px 1fr;gap:16px;margin-top:16px}
+    .legend{padding:12px}
+    .key-title{ text-align:center; font-weight:700; font-size:0.95rem; color:#334; margin-bottom:6px; }
+    .legend .row{display:flex;gap:10px;align-items:center;margin:10px 0}
+    .swatch{width:22px;height:22px;border-radius:6px;border:1px solid rgba(0,0,0,0.06)}
+    .reviews-blob{position:relative;border-radius:18px;padding:22px;min-height:180px;background:linear-gradient(135deg,#9dc9e4 0%,#c084bd 50%,#f1a997 100%);box-shadow:0 10px 40px rgba(30,30,30,0.06);overflow:hidden}
+    .bubble{position:absolute;border-radius:14px;padding:10px 12px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,0.18);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);box-shadow:0 8px 24px rgba(0,0,0,0.06);font-size:13px;color:#ffffff}
+    .bubble .stars{color:#ffffff;font-weight:700;margin-bottom:6px;opacity:0.95}
+    .bubble.b1{left:18%;top:18%;width:220px}
+    .bubble.b2{left:60%;top:10%;width:160px}
+    .bubble.b3{left:35%;top:50%;width:200px}
+    .bubble.b4{left:75%;top:48%;width:140px}
+    .bubble.b5{left:58%;top:72%;width:180px}
+    .map-caption{position:absolute;left:24px;bottom:22px;background:rgba(255,255,255,0.95);padding:8px 10px;border-radius:8px;font-size:13px;color:#333;border:1px solid rgba(0,0,0,0.04)}
+    .map-status{position:absolute;left:22px;top:42px;z-index:1350;background:rgba(255,255,255,0.95);border:1px solid rgba(0,0,0,0.06);border-radius:10px;padding:6px 10px;font-size:12px;color:#223;box-shadow:0 6px 18px rgba(0,0,0,0.06);display:none;pointer-events:none}
+    .map-status.show{display:block}
+    @media (max-width:980px){.main{grid-template-columns:1fr}.bottom{grid-template-columns:1fr}.right-col{order:2}.logo{width:120px;height:56px;flex:0 0 120px;transform:translateY(4px)}}
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <div class="search-wrap" role="search" aria-label="Search locations">
+        <input class="search-input" placeholder="Search places (name, address)..." aria-label="Search field" />
+        <button class="search-btn">Search</button>
+        <div id="search-suggestions" class="search-suggestions" hidden aria-hidden="true"></div>
+      </div>
+
+      <div class="filter-dropdown" title="Filter third-spaces">
+        <button id="filter-btn" class="filter-btn" aria-haspopup="true" aria-expanded="false">Filters ▾</button>
+        <div id="filter-menu" class="filter-menu" role="menu" aria-hidden="true">
+          <label role="menuitem"><input id="filter-cafes" type="checkbox" checked /> Cafes / Restaurants</label>
+          <label role="menuitem"><input id="filter-parks" type="checkbox" checked /> Parks / Open spaces</label>
+          <label role="menuitem"><input id="filter-libs" type="checkbox" checked /> Libraries / Public centres</label>
+          <hr style="margin:8px 0;border:none;border-top:1px solid rgba(0,0,0,0.06)"/>
+          <label role="menuitem"><input id="iso-toggle" type="checkbox" /> 10‑20 minute walking isochrone (click map)</label>
+        </div>
+      </div>
+
+      <div class="zip-controls" title="Search by ZIP and radius">
+        <input id="zip-input" type="text" placeholder="ZIP code" aria-label="ZIP code" />
+        <input id="radius-input" type="number" placeholder="Mile Radius" min="1" step="1" title="miles" aria-label="Radius in miles" />
+        <button id="apply-zip-btn" title="Apply ZIP+radius">Go</button>
+      </div>
+
+      <div class="logo" aria-hidden="true"><img src="assets/my_3rd_logo.svg" alt="my 3rd place" /></div>
+    </header>
+
+    <div class="main">
+      <div class="map-card" aria-label="Map area">
+        <div id="map" aria-label="OpenStreetMap map"></div>
+        <div id="map-status" class="map-status" aria-hidden="true"></div>
+        <div class="map-caption">Map</div>
+      </div>
+
+      <aside class="right-col" aria-label="Side panels">
+        <div class="panel">
+          <h3 id="wiki-title">Wiki Overview</h3>
+          <div id="wiki-overview" class="content">Click a place marker to see details and generated reviews.</div>
+        </div>
+
+        <div class="panel" style="min-height:160px;display:flex;flex-direction:column;justify-content:center;align-items:center;">
+          <h3 style="width:100%;text-align:left">Walkability Score</h3>
+          <div id="walkability-definition" style="font-size:25px;font-weight:800;color:#2e6b2f"></div>
+          <div id="walkability-desc" style="color:var(--muted);font-size:13px;line-height:1.45;margin-top:8px;text-align:left;max-width:320px">
+            We can define walkability as a combination of (1) the number of useful third places reachable within a 10-minute walk and (2) how connected the walking network is, estimated from the size and shape of the isochrone. More amenities and a larger, more compact isochrone produce a higher score.
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <div class="bottom">
+      <div class="legend panel" aria-label="Legend">
+        <div class="key-title">Key</div>
+        <div class="row"><div class="swatch" style="background:var(--pin-other)"></div><div class="muted">Cafes, restaurants</div></div>
+        <div class="row"><div class="swatch" style="background:var(--pin-park)"></div><div class="muted">Open spaces, parks</div></div>
+        <div class="row"><div class="swatch" style="background:var(--pin-lib)"></div><div class="muted">Libraries, public centres</div></div>
+      </div>
+
+      <div class="reviews-blob" aria-label="Reviews area">
+        <div id="reviews-placeholder" style="color:rgba(255,255,255,0.95);font-size:14px;display:flex;align-items:center;justify-content:center;height:100%;">
+          Click a place marker to see generated reviews.
+        </div>
+      </div>
+    </div>
+  </div>
+
+    <!-- TEMP: set ORS API key for local testing ONLY. Do not commit this to git -->
+  <script>
+    window.ORS_API_KEY = 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6Ijg0N2MxMDlkYTBmNzQzNmNiZDlmMmUyM2JmOTIxOWZjIiwiaCI6Im11cm11cjY0In0=';
+  </script>
+
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <script>
+    // small helpers
+    function escapeHtml(s){ if(!s) return ''; return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+    function formatTags(tags){ if(!tags) return ''; const p=[]; if(tags.website) p.push(`<a href="${escapeHtml(tags.website)}" target="_blank" rel="noopener">${escapeHtml(tags.website)}</a>`); if(tags.phone) p.push(escapeHtml(tags.phone)); if(tags['addr:street']) p.push(escapeHtml(tags['addr:street'])); return p.join(' • '); }
+    function debounce(fn, ms){ let t=null; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), ms); }; }
+
+    // UI elements
+    const filterBtn = document.getElementById('filter-btn');
+    const filterMenu = document.getElementById('filter-menu');
+    filterBtn.addEventListener('click', ()=>{ const isOpen = filterMenu.style.display === 'block'; filterMenu.style.display = isOpen ? 'none' : 'block'; filterBtn.setAttribute('aria-expanded', String(!isOpen)); filterMenu.setAttribute('aria-hidden', String(isOpen)); });
+    document.addEventListener('click', (e)=>{ if(!filterBtn.contains(e.target) && !filterMenu.contains(e.target)){ filterMenu.style.display='none'; filterBtn.setAttribute('aria-expanded','false'); filterMenu.setAttribute('aria-hidden','true'); }});
+    document.addEventListener('keydown',(e)=>{ if(e.key==='Escape'){ filterMenu.style.display='none'; filterBtn.setAttribute('aria-expanded','false'); filterMenu.setAttribute('aria-hidden','true'); }});
+
+    // map
+    const map = L.map('map', { zoomControl:true }).setView([44.61, -106.00], 6);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{ maxZoom:19, attribution:'&copy; OpenStreetMap contributors' }).addTo(map);
+
+    // status
+    const statusEl = document.getElementById('map-status');
+    function setStatus(t){ if(!t){ statusEl.textContent=''; statusEl.classList.remove('show'); statusEl.setAttribute('aria-hidden','true'); } else { statusEl.textContent=t; statusEl.classList.add('show'); statusEl.setAttribute('aria-hidden','false'); } }
+
+    // layer groups and icons (colors follow legend)
+    const layers = { cafes: L.layerGroup().addTo(map), parks: L.layerGroup().addTo(map), libs: L.layerGroup().addTo(map) };
+    function makeIcon(color){ const svg = encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="28" height="36" viewBox="0 0 32 40"><path d="M16 0C9 0 4 5 4 11c0 8 12 24 12 24s12-16 12-24C28 5 23 0 16 0z" fill="${color}" stroke="#ffffff" stroke-width="2"/></svg>`); return L.icon({ iconUrl:`data:image/svg+xml;utf8,${svg}`, iconSize:[28,36], iconAnchor:[14,36], popupAnchor:[0,-30] }); }
+    const icons = { cafes: makeIcon(getComputedStyle(document.documentElement).getPropertyValue('--pin-other').trim() || '#f1a897'), parks: makeIcon(getComputedStyle(document.documentElement).getPropertyValue('--pin-park').trim() || '#8ccbf1'), libs: makeIcon(getComputedStyle(document.documentElement).getPropertyValue('--pin-lib').trim() || '#a1679c') };
+
+    // search / zip state
+    let searchCenter = null, searchRadiusMeters = null, searchCircleLayer = null;
+    function clearAllPoiLayers(){ layers.cafes.clearLayers(); layers.parks.clearLayers(); layers.libs.clearLayers(); }
+
+    // safe Overpass wrapper with request id to ignore stale responses
+    const reqId = { cafes:0, parks:0, libs:0 }, inFlight = { cafes:false, parks:false, libs:false };
+    async function fetchOverpass(query){
+      const res = await fetch('https://overpass-api.de/api/interpreter', { method:'POST', headers:{'Content-Type':'text/plain'}, body:query });
+      if(!res.ok){ const t = await res.text().catch(()=>res.statusText); throw new Error(`Overpass ${res.status}: ${t.slice(0,200)}`); }
+      return res.json();
+    }
+    function buildOverpassQuery(category){
+      if(searchCenter && searchRadiusMeters){
+        const lat=searchCenter.lat, lon=searchCenter.lon, r=Math.round(searchRadiusMeters);
+        if(category==='cafes') return `[out:json][timeout:25];( node(around:${r},${lat},${lon})["amenity"~"cafe|restaurant"]; way(around:${r},${lat},${lon})["amenity"~"cafe|restaurant"]; );out center;`;
+        if(category==='parks') return `[out:json][timeout:25];( node(around:${r},${lat},${lon})["leisure"~"park|garden|recreation_ground"]; way(around:${r},${lat},${lon})["leisure"~"park|garden|recreation_ground"]; );out center;`;
+        if(category==='libs') return `[out:json][timeout:25];( node(around:${r},${lat},${lon})["amenity"~"library|community_centre"]; way(around:${r},${lat},${lon})["amenity"~"library|community_centre"]; );out center;`;
+        return '';
+      }
+      const b = map.getBounds(); const bbox = `${b.getSouth()},${b.getWest()},${b.getNorth()},${b.getEast()}`;
+      if(category==='cafes') return `[out:json][timeout:25];( node["amenity"~"cafe|restaurant"](${bbox}); way["amenity"~"cafe|restaurant"](${bbox}); );out center;`;
+      if(category==='parks') return `[out:json][timeout:25];( node["leisure"~"park|garden|recreation_ground"](${bbox}); way["leisure"~"park|garden|recreation_ground"](${bbox}); );out center;`;
+      if(category==='libs') return `[out:json][timeout:25];( node["amenity"~"library|community_centre"](${bbox}); way["amenity"~"library|community_centre"](${bbox}); );out center;`;
+      return '';
+    }
+
+    // lightweight review generator tied to name + category
+    function fnv1a(s){ let h=2166136261>>>0; for(let i=0;i<s.length;i++) h=Math.imul(h^s.charCodeAt(i),16777619)>>>0; return h; }
+    function stars(n){ n=Math.max(0,Math.min(5,Math.round(n))); return '★'.repeat(n) + '☆'.repeat(5-n); }
+    function generateReviews(name, category, tags){
+      const seed = fnv1a((name||'') + '|' + (category||''));
+      const rnd = (i=0)=> ((seed >>> (i*4)) % 100) / 100;
+      const templates = { cafes:[`Cozy spot — good coffee and quiet corners.`,`Friendly staff and tasty pastries.`,`Nice for remote work — decent Wi‑Fi.`], parks:[`Relaxing green space with walking paths.`,`Great for kids and dogs.`,`Shaded benches and picnic areas.`], libs:[`Quiet and well-stocked.`,`Good study spaces and public computers.`,`Friendly staff and community events.`], default:[`Pleasant place to visit.`,`Clean and welcoming.`,`Good for a short break.`] };
+      const pool = templates[category] || templates.default;
+      const out = [];
+      const authors = ['Alex','Jordan','Taylor','Sam','Casey','Riley','Morgan'];
+      for(let i=0;i<5;i++){ const idx=Math.floor(rnd(i)*pool.length); const rating = 3 + Math.floor(rnd(i+3)*3); out.push({ text:pool[idx], rating, author:authors[Math.floor(rnd(i+6)*authors.length)], when:`${1+Math.floor(rnd(i+8)*30)} days ago` }); }
+      return out;
+    }
+    function updateReviewsPanel(name, category, tags){
+      const container = document.querySelector('.reviews-blob'); if(!container) return;
+      const reviews = generateReviews(name,category,tags);
+      const positions = ['b1','b2','b3','b4','b5'];
+      container.innerHTML = '';
+      reviews.forEach((r,i)=>{ const d=document.createElement('div'); d.className=`bubble ${positions[i]||''}`; d.innerHTML=`<div class="stars">${stars(r.rating)}</div><div style="font-size:13px">${escapeHtml(r.text)}</div><div style="opacity:.9;font-size:12px;margin-top:8px">— ${escapeHtml(r.author)}, <span style="opacity:.9">${escapeHtml(r.when)}</span></div>`; container.appendChild(d); });
+    }
+
+    // optional: fetch short wiki summary (best-effort, CORS allowed)
+    async function fetchWikiSummary(title){
+      if(!title) return null;
+      const t = encodeURIComponent(title.replace(/\s+/g,'_'));
+      try{ const res = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${t}`, { headers:{ Accept:'application/json' } }); if(!res.ok) return null; return await res.json(); }catch(e){ return null; }
+    }
+
+    // create markers from Overpass results and attach click handlers
+    async function fetchCategory(category){
+      const my = ++reqId[category]; inFlight[category]=true;
+      const q = buildOverpassQuery(category); if(!q){ inFlight[category]=false; return; }
+      try{
+        setStatus('Loading places…');
+        const data = await fetchOverpass(q);
+        if(my !== reqId[category]) return; // stale
+        layers[category].clearLayers();
+        const els = data.elements || [];
+        els.forEach(el=>{
+          const lat = (el.lat ?? el.center?.lat), lon = (el.lon ?? el.center?.lon);
+          if(lat == null || lon == null) return;
+          let name = (el.tags && (el.tags.name || el.tags['official_name'] || el.tags['name:en'])) || (el.tags && (el.tags.amenity || el.tags.leisure)) || 'Place';
+          // normalize garden -> Park / Garden
+          if(typeof name === 'string' && name.trim().toLowerCase() === 'garden') name = 'Park / Garden';
+          const popup = `<strong>${escapeHtml(name)}</strong><br/>${formatTags(el.tags)}`;
+          const m = L.marker([lat,lon], { icon: icons[category] }).bindPopup(popup).addTo(layers[category]);
+          m.on('click', async ()=>{
+            // update right panel wiki + reviews
+            const wikiTitleEl = document.getElementById('wiki-title');
+            const wikiOverviewEl = document.getElementById('wiki-overview');
+            if(wikiTitleEl) wikiTitleEl.textContent = name;
+            if(wikiOverviewEl) wikiOverviewEl.innerHTML = `<div style="opacity:.8">Loading information for <strong>${escapeHtml(name)}</strong>…</div>`;
+            // generate reviews synchronously
+            updateReviewsPanel(name, category, el.tags);
+            // try wiki summary (async)
+            const wiki = await fetchWikiSummary(name);
+            if(wiki && (wiki.extract_html || wiki.extract)){
+              const html = wiki.extract_html || `<p>${escapeHtml(wiki.extract)}</p>`;
+              const url = wiki.content_urls?.desktop?.page || `https://en.wikipedia.org/wiki/${encodeURIComponent(name)}`;
+              if(wikiOverviewEl) wikiOverviewEl.innerHTML = `<div style="font-size:15px"><strong>${escapeHtml(name)}</strong></div><div style="margin-top:8px;font-size:13px">${html}</div><div style="margin-top:8px"><a href="${escapeHtml(url)}" target="_blank" rel="noopener">Read more on Wikipedia</a></div>`;
+            } else {
+              if(wikiOverviewEl) wikiOverviewEl.innerHTML = `<div style="font-size:15px"><strong>${escapeHtml(name)}</strong></div><div style="margin-top:8px;font-size:13px">${formatTags(el.tags) || 'No additional summary available.'}</div>`;
+            }
+          });
+        });
+      }catch(err){
+        console.warn('Overpass fetch failed',category,err);
+        setStatus('Overpass error — try again later');
+      }finally{
+        if(my === reqId[category]) inFlight[category]=false;
+        const any = Object.values(inFlight).some(Boolean);
+        if(!any) setStatus('');
+      }
+    }
+
+    // filters + visibility
+    const cbCafes = document.getElementById('filter-cafes'), cbParks = document.getElementById('filter-parks'), cbLibs = document.getElementById('filter-libs');
+    async function applyVisibility(){ layers.cafes[cbCafes.checked ? 'addTo' : 'removeFrom'](map); layers.parks[cbParks.checked ? 'addTo' : 'removeFrom'](map); layers.libs[cbLibs.checked ? 'addTo' : 'removeFrom'](map); }
+    async function refreshVisible(){ await applyVisibility(); const jobs=[]; if(cbCafes.checked && layers.cafes.getLayers().length===0 && !inFlight.cafes) jobs.push(fetchCategory('cafes')); if(cbParks.checked && layers.parks.getLayers().length===0 && !inFlight.parks) jobs.push(fetchCategory('parks')); if(cbLibs.checked && layers.libs.getLayers().length===0 && !inFlight.libs) jobs.push(fetchCategory('libs')); await Promise.allSettled(jobs); }
+    cbCafes.addEventListener('change', refreshVisible); cbParks.addEventListener('change', refreshVisible); cbLibs.addEventListener('change', refreshVisible);
+
+    // legend row toggles
+    document.querySelectorAll('.legend .row').forEach((row,i)=>{ row.style.cursor='pointer'; row.addEventListener('click',()=>{ if(i===0) cbCafes.click(); if(i===1) cbParks.click(); if(i===2) cbLibs.click(); }); });
+
+    // map move refresh (debounced)
+    const refreshFromMapMove = debounce(()=>{ if(searchCenter && searchRadiusMeters) return; if(cbCafes.checked && !inFlight.cafes) fetchCategory('cafes'); if(cbParks.checked && !inFlight.parks) fetchCategory('parks'); if(cbLibs.checked && !inFlight.libs) fetchCategory('libs'); }, 800);
+    map.on('moveend', refreshFromMapMove); map.on('zoomend', refreshFromMapMove);
+
+    // ZIP geocoding
+    async function geocodeZip(zip){ const q=encodeURIComponent(zip+' USA'); const url=`https://nominatim.openstreetmap.org/search?format=json&countrycodes=us&q=${q}&limit=1`; const r=await fetch(url); if(!r.ok) return null; const a=await r.json(); if(!a||a.length===0) return null; return { lat:parseFloat(a[0].lat), lon:parseFloat(a[0].lon) }; }
+    const applyBtn = document.getElementById('apply-zip-btn'), clearBtn = document.getElementById('clear-zip-btn');
+    applyBtn.addEventListener('click', async ()=>{
+      const zip = document.getElementById('zip-input').value.trim(); const miles = parseFloat(document.getElementById('radius-input').value) || 10; if(!zip){ alert('Enter a ZIP code'); return; }
+       setStatus('Finding ZIP…'); const loc = await geocodeZip(zip); if(!loc){ setStatus(''); alert('ZIP not found'); return; }
+       searchCenter = loc; searchRadiusMeters = miles * 1609.34;
+      if(searchCircleLayer) searchCircleLayer.remove();
+      searchCircleLayer = L.circle([loc.lat,loc.lon],{ radius: searchRadiusMeters, color:'#2e6b2f', weight:1, fill:false }).addTo(map);
+      map.fitBounds(searchCircleLayer.getBounds(), { maxZoom:14, padding:[40,40] });
+      clearAllPoiLayers();
+      const jobs=[]; if(cbCafes.checked) jobs.push(fetchCategory('cafes')); if(cbParks.checked) jobs.push(fetchCategory('parks')); if(cbLibs.checked) jobs.push(fetchCategory('libs')); await Promise.allSettled(jobs);
+      setStatus('');
+    });
+    if (clearBtn) {
+      clearBtn.addEventListener('click', async ()=>{ searchCenter=null; searchRadiusMeters=null; if(searchCircleLayer){ searchCircleLayer.remove(); searchCircleLayer=null; } map.setView([44.61, -106.00], 6); clearAllPoiLayers(); await refreshVisible(); });
+    }
+
+    // center marker
+    const svgCenter = encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="32" height="40" viewBox="0 0 32 40"><path d="M16 0C9 0 4 5 4 11c0 8 12 24 12 24s12-16 12-24C28 5 23 0 16 0z" fill="#c084bd" stroke="#ffffff" stroke-width="2"/></svg>`);
+    const centerIcon = L.icon({ iconUrl:`data:image/svg+xml;utf8,${svgCenter}`, iconSize:[32,40], iconAnchor:[16,40], popupAnchor:[0,-36] });
+    L.marker([44.61,-106.00], { icon: centerIcon }).addTo(map).bindPopup('Map center: 44.61, -106.00');
+
+    // Isochrone: uses window.ORS_API_KEY (do not commit key)
+    const apiKey = (window.ORS_API_KEY||'').trim();
+    let isochroneLayer = null;
+
+    // --- Walkability helpers ---
+    function haversineMeters(lat1, lon1, lat2, lon2){
+      const R = 6371000;
+      const toRad = v => v * Math.PI / 180;
+      const dLat = toRad(lat2 - lat1), dLon = toRad(lon2 - lon1);
+      const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2)**2;
+      return 2 * R * Math.asin(Math.sqrt(a));
+    }
+
+    function polygonAreaMeters(coords){
+      // coords: array of [lon,lat] (closed or not)
+      if(!coords || coords.length < 3) return 0;
+      const lats = coords.map(c=>c[1]); const meanLat = lats.reduce((a,b)=>a+b,0)/lats.length;
+      const mPerDegLat = 111132; // approximate
+      const mPerDegLon = 111320 * Math.cos(meanLat * Math.PI/180);
+      const pts = coords.map(c=>({ x: c[0] * mPerDegLon, y: c[1] * mPerDegLat }));
+      let sum = 0;
+      for(let i=0;i<pts.length;i++){
+        const j = (i+1) % pts.length;
+        sum += pts[i].x * pts[j].y - pts[j].x * pts[i].y;
+      }
+      return Math.abs(sum) / 2;
+    }
+
+    function polygonPerimeterMeters(coords){
+      if(!coords || coords.length < 2) return 0;
+      let p = 0;
+      for(let i=0;i<coords.length-1;i++){
+        p += haversineMeters(coords[i][1], coords[i][0], coords[i+1][1], coords[i+1][0]);
+      }
+      // close ring
+      p += haversineMeters(coords[coords.length-1][1], coords[coords.length-1][0], coords[0][1], coords[0][0]);
+      return p;
+    }
+
+    function pointInPoly(point, vs){
+      // point: [lon,lat], vs: array of [lon,lat]
+      const x = point[0], y = point[1];
+      let inside = false;
+      for (let i = 0, j = vs.length - 1; i < vs.length; j = i++) {
+        const xi = vs[i][0], yi = vs[i][1];
+        const xj = vs[j][0], yj = vs[j][1];
+        const intersect = ((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi + 0.0) + xi);
+        if (intersect) inside = !inside;
+      }
+      return inside;
+    }
+
+    function computeWalkabilityFromGeoJSON(geojson){
+      if(!geojson || !geojson.features || geojson.features.length===0){
+        return { score: 1, compactness: 0, amenCount: 0, area: 0, perim: 0 };
+      }
+      // get first polygon ring (fallback to first polygon ring found)
+      let ring = null;
+      for(const f of geojson.features){
+        const geom = f.geometry;
+        if(!geom) continue;
+        if(geom.type === 'Polygon'){ ring = geom.coordinates[0]; break; }
+        if(geom.type === 'MultiPolygon'){ ring = geom.coordinates[0][0]; break; }
+      }
+      if(!ring) return { score: 1, compactness: 0, amenCount: 0, area: 0, perim: 0 };
+      // ring is array of [lon,lat]
+      const area = polygonAreaMeters(ring);
+      const perim = polygonPerimeterMeters(ring);
+      const compactness = perim > 0 ? Math.max(0, Math.min(1, (4 * Math.PI * area) / (perim * perim))) : 0;
+
+      // count amenities inside isochrone
+      let amenCount = 0;
+      ['cafes','parks','libs'].forEach(cat=>{
+        layers[cat].getLayers().forEach(m=>{
+          if(typeof m.getLatLng === 'function'){
+            const ll = m.getLatLng();
+            if(pointInPoly([ll.lng, ll.lat], ring)) amenCount++;
+          }
+        });
+      });
+
+      // normalize amenity count (tune target as needed)
+      const amenNorm = Math.max(0, Math.min(1, amenCount / 20));
+
+      // weighted score: prioritize compactness (tighter circle = higher)
+      const weighted = 0.7 * compactness + 0.3 * amenNorm;
+      const score = Math.max(1, Math.min(100, Math.round(1 + 99 * weighted)));
+      return { score, compactness: Math.round(compactness*1000)/1000, amenCount, area, perim };
+    }
+    // --- end Walkability helpers ---
+
+    async function getWalkingIsochrone(lat,lng){
+      if(!apiKey){ console.warn('ORS API key not set (window.ORS_API_KEY)'); alert('Isochrone key not set'); return; }
+      const url = 'https://api.openrouteservice.org/v2/isochrones/foot-walking';
+      const body = { locations:[[lng,lat]], range:[600], range_type:'time' };
+      try{
+        const res = await fetch(url, { method:'POST', headers:{ 'Authorization':apiKey,'Content-Type':'application/json' }, body: JSON.stringify(body) });
+        if(!res.ok){ const t=await res.text().catch(()=>res.statusText); console.warn('Isochrone failed',res.status,t); alert('Isochrone request failed'); return; }
+        const geo = await res.json();
+        if(isochroneLayer){ isochroneLayer.remove(); isochroneLayer=null; }
+        isochroneLayer = L.geoJSON(geo, { style:{ color:'#3b82f6', weight:2, fillColor:'#3b82f6', fillOpacity:0.12 } }).addTo(map);
+        const b = isochroneLayer.getBounds(); if(b && b.isValid && b.isValid()) map.fitBounds(b, { padding:[20,20], maxZoom:15 });
+
+        // compute walkability and display it
+        const w = computeWalkabilityFromGeoJSON(geo);
+        const el = document.getElementById('walkability-definition');
+        if(el){
+          el.textContent = w.score;
+          // color by score ranges: 0-33 red, 34-66 orange, 67-79 yellow, 80-100 green
+          const s = Number(w.score) || 0;
+          let color = '#2e6b2f';
+          if(s <= 33) color = '#d9534f';       // red
+          else if(s <= 66) color = '#f39c12';  // orange
+          else if(s <= 79) color = '#f1c40f';  // yellow
+          else color = '#2ecc71';              // green
+          el.style.color = color;
+          el.title = `Score: ${w.score} — amenities: ${w.amenCount}, compactness: ${w.compactness}`;
+        }
+
+      }catch(e){ console.warn('Isochrone error',e); alert('Isochrone error — check console'); }
+    }
+    let isoKeyMode=false; const isoCheckbox = document.getElementById('iso-toggle');
+    function setIsoMode(on){ isoKeyMode=Boolean(on); if(isoCheckbox) isoCheckbox.checked=isoKeyMode; map.getContainer().style.cursor = isoKeyMode ? 'crosshair' : ''; let hint=document.getElementById('iso-mode-note'); if(!hint){ hint=document.createElement('div'); hint.id='iso-mode-note'; hint.style.position='absolute'; hint.style.right='18px'; hint.style.top='18px'; hint.style.padding='8px 10px'; hint.style.background='rgba(255,255,255,0.95)'; hint.style.border='1px solid rgba(0,0,0,0.06)'; hint.style.borderRadius='10px'; hint.style.zIndex=1300; hint.style.fontSize='13px'; hint.textContent='Isochrone mode: click map to generate. Press W to exit.'; document.querySelector('.map-card').appendChild(hint); } hint.style.display = isoKeyMode ? 'block' : 'none'; }
+    document.addEventListener('keydown',(e)=>{ if(e.key && e.key.toLowerCase()==='w'){ const active=document.activeElement; const tag=active && active.tagName?active.tagName.toUpperCase():''; if(tag==='INPUT' || tag==='TEXTAREA' || active?.isContentEditable) return; setIsoMode(!isoKeyMode); e.preventDefault(); }});
+    map.on('click',(e)=>{ const enabled = (document.getElementById('iso-toggle')?.checked) || isoKeyMode; if(enabled) getWalkingIsochrone(e.latlng.lat,e.latlng.lng); });
+    if(isoCheckbox){ isoCheckbox.addEventListener('change',(ev)=>{ if(!ev.target.checked) setIsoMode(false); else setIsoMode(true); }); }
+    document.getElementById('iso-toggle').addEventListener('change',(ev)=>{ if(!ev.target.checked && isochroneLayer){ isochroneLayer.remove(); isochroneLayer=null; } });
+
+    // search autocomplete (Nominatim)
+    (function(){
+      const input = document.querySelector('.search-input'); const sugEl = document.getElementById('search-suggestions');
+      let items=[], active=-1, debounceTm=null, searchMarker=null;
+      function hide(){ sugEl.hidden=true; sugEl.setAttribute('aria-hidden','true'); active=-1; items=[]; sugEl.innerHTML=''; }
+      function showList(list){ items=list; active=-1; if(!list||list.length===0){ hide(); return; } sugEl.innerHTML = list.map((it,i)=>`<div class="item" data-i="${i}"><strong>${it.display_name.split(',')[0]}</strong><div style="opacity:.7;font-size:12px">${it.type||it.class||''}</div></div>`).join(''); sugEl.hidden=false; sugEl.setAttribute('aria-hidden','false'); }
+      function selectIndex(i){ const it=items[i]; if(!it) return; input.value = it.display_name.split(',')[0]; hide(); const lat=parseFloat(it.lat), lon=parseFloat(it.lon); if(!isFinite(lat)||!isFinite(lon)) return; if(searchMarker) searchMarker.remove(); searchMarker = L.marker([lat,lon]).addTo(map).bindPopup(it.display_name.split(',')[0]).openPopup(); map.setView([lat,lon],15); }
+      function fetchSuggestions(q){ const url=`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=6&addressdetails=0&namedetails=0`; fetch(url).then(r=>r.json()).then(data=>showList(data||[])).catch(err=>{ console.warn('Autocomplete error',err); hide(); }); }
+      input.addEventListener('input',(e)=>{ const q=e.target.value.trim(); clearTimeout(debounceTm); if(q.length<2){ hide(); return; } debounceTm=setTimeout(()=>fetchSuggestions(q),250); });
+      input.addEventListener('keydown',(e)=>{ if(sugEl.hidden) return; const max = items.length-1; if(e.key==='ArrowDown'){ e.preventDefault(); active=Math.min(max,active+1); updateActive(); } else if(e.key==='ArrowUp'){ e.preventDefault(); active=Math.max(0,active-1); updateActive(); } else if(e.key==='Enter'){ e.preventDefault(); if(active>=0) selectIndex(active); } else if(e.key==='Escape'){ hide(); } });
+      function updateActive(){ Array.from(sugEl.children).forEach((c,idx)=>c.classList.toggle('active', idx===active)); if(active>=0){ const el=sugEl.children[active]; el.scrollIntoView({ block:'nearest' }); } }
+      sugEl.addEventListener('click',(ev)=>{ const item=ev.target.closest('.item'); if(!item) return; const i=Number(item.dataset.i); selectIndex(i); });
+      document.addEventListener('click',(ev)=>{ if(!input.contains(ev.target) && !sugEl.contains(ev.target)) hide(); });
+    })();
+
+    // start once map ready
+    map.whenReady(()=>{ refreshVisible(); setTimeout(()=>map.invalidateSize(),250); });
+  </script>
+</body>
+</html>
+
