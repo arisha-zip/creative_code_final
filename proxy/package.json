@@ -1,0 +1,8 @@
+{
+  "name": "walkscore-proxy",
+  "version": "1.0.0",
+  "main": "walkscore-proxy.js",
+  "scripts": {
+    "start": "node walkscore-proxy.js"
+  }
+}

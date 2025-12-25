@@ -578,8 +578,8 @@
         const address = geoData.display_name || `${lat},${lng}`;
 
         // Call proxy server (run walkscore-proxy.js locally)
-        const proxyUrl = `http://localhost:3001/walkscore?lat=${lat}&lon=${lng}&address=${encodeURIComponent(address)}`;
-        const res = await fetch(proxyUrl);
+        const proxyUrl = `https://creative-code-final.onrender.com`;
+        const res = await fetch(`${proxyUrl}/walkscore?lat=${lat}&lon=${lng}&address=${encodeURIComponent(address)}`);
         const data = await res.json();
 
         const walkProgress = document.getElementById('walk-progress');
