@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Third Places — Map</title>
 
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
   <style>
@@ -17,8 +21,8 @@
       --pin-other:#f1a897;
       --header-green:#abbf60;
     }
-    html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial;background:var(--bg);color:#223}
-    .page{max-width:1800px;margin:0px auto;padding:0px;box-sizing:border-box}
+    html,body{height:100%;margin:0;font-family:'Poppins',system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:#223}
+    .page{max-width:1800px;margin:0px auto;padding:0 16px;box-sizing:border-box}
     /* keep header fixed at top */
     header{
       position:sticky;
@@ -27,47 +31,90 @@
       display:flex;
       align-items:center;
       gap:12px;
-      margin:0;
+      margin:0 -16px;
       background:var(--header-green);
-      padding:16px;
+      padding:14px 30px;
       border-radius:0;
       box-shadow:0 6px 18px rgba(0,0,0,0.06);
+      margin-bottom:12px;
     }
-    .search-wrap{flex:1;display:flex;align-items:center;gap:12px;background:linear-gradient(90deg,#fff,#fbfffb);padding:12px 16px;border-radius:28px;border:2px solid rgba(34,34,34,0.04);box-shadow:0 6px 18px rgba(30,30,30,0.04);position:relative}
+    .search-wrap{flex:0.75;display:flex;align-items:center;gap:12px;background:linear-gradient(90deg,#fff,#fbfffb);padding:10px 14px;border-radius:28px;border:2px solid rgba(34,34,34,0.15);box-shadow:0 6px 18px rgba(30,30,30,0.04);position:relative}
     .search-input{flex:1;border:0;background:transparent;padding:8px;font-size:15px}
-    .search-btn{border-radius:8px;padding:8px 10px;border:0;background:#fff;cursor:pointer}
+    .search-btn{border:0;background:transparent;cursor:pointer;padding:8px;display:flex;align-items:center;justify-content:center}
+    .search-btn svg{width:22px;height:22px;stroke:#333;stroke-width:2}
     .search-suggestions{position:absolute;left:12px;right:12px;top:100%;margin-top:8px;background:#fff;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.12);max-height:280px;overflow:auto;z-index:1400;font-size:14px}
     .search-suggestions .item{padding:8px 10px;cursor:pointer;border-bottom:1px solid rgba(0,0,0,0.04)}
     .search-suggestions .item:last-child{border-bottom:0}
     .search-suggestions .item:hover,.search-suggestions .item.active{background:rgba(0,0,0,0.03)}
-    .filter-dropdown{position:relative;font-size:13px;margin-left:8px}
-    .filter-btn{background:rgba(255,255,255,0.12);border:0;padding:8px 12px;border-radius:10px;cursor:pointer;color:#122;display:inline-flex;align-items:center;gap:8px}
+    .filter-dropdown{position:relative;font-size:15px;margin-left:8px}
+    .filter-btn{background:linear-gradient(135deg,#9dc9e4 0%,#c084bd 50%,#f1a997 100%);border:2px solid #fff;padding:18px 16px;border-radius:28px;cursor:pointer;color:#fff;font-weight:600;display:inline-flex;align-items:center;gap:8px;box-shadow:0 6px 18px rgba(30,30,30,0.1);transition:opacity .15s}
+    .filter-btn:hover{opacity:0.9}
     .filter-menu{position:absolute;top:calc(100% + 8px);left:0;min-width:220px;background:#fff;border-radius:10px;padding:8px;box-shadow:0 8px 24px rgba(0,0,0,0.12);display:none;z-index:1200}
     .filter-menu label{display:flex;gap:8px;align-items:center;padding:8px;border-radius:8px;color:#223;cursor:pointer}
-    .zip-controls{display:flex;gap:8px;align-items:center;margin-left:8px}
-    .logo{width:250px;height:142px;border-radius:10px;display:flex;align-items:center;justify-content:center;overflow:hidden;flex:0 0 180px;transform:translateY(6px)}
-    .main{display:grid;grid-template-columns:1fr 340px;gap:16px}
+    .zip-wrap{display:flex;align-items:center;margin-left:8px;background:linear-gradient(90deg,#fff,#fbfffb);padding:10px 14px;border-radius:28px;border:2px solid rgba(34,34,34,0.04);box-shadow:0 6px 18px rgba(30,30,30,0.04)}
+    .zip-wrap input{border:0;background:transparent;padding:8px;font-size:15px;width:70px}
+    .zip-wrap input::placeholder{color:#999}
+    .radius-wrap{display:flex;gap:8px;align-items:center;margin-left:8px;background:linear-gradient(90deg,#fff,#fbfffb);padding:10px 14px;border-radius:28px;border:2px solid rgba(34,34,34,0.04);box-shadow:0 6px 18px rgba(30,30,30,0.04)}
+    .radius-wrap input{border:0;background:transparent;padding:8px;font-size:15px;width:110px}
+    .radius-wrap input::placeholder{color:#999}
+    .iso-btn{background:rgba(0,0,0,0.06);border:2px solid transparent;padding:12px 22px;border-radius:28px;cursor:pointer;color:#122;font-size:15px;white-space:nowrap;transition:all .25s ease;transform:scale(1);font-weight:500;}
+    .search-input::placeholder{color:#999}
+    .iso-btn:hover{background:rgba(0,0,0,0.1);transform:scale(1.03);}
+    .iso-btn:active{transform:scale(0.95);transition:transform 0.1s;}
+    .iso-btn.active{background:#2596be;border:2px solid #2596be;color:#fff;font-weight:500;box-shadow:0 4px 14px rgba(37,150,190,0.35);animation:btnPulse 0.4s ease-out;letter-spacing:0.3px;}
+    @keyframes btnPulse{0%{transform:scale(0.95);box-shadow:0 0 0 0 rgba(37,150,190,0.4);}50%{transform:scale(1.03);box-shadow:0 0 0 8px rgba(37,150,190,0);}100%{transform:scale(1);box-shadow:0 4px 14px rgba(37,150,190,0.35);}}
+    .logo{width:250px;height:142px;border-radius:10px;display:flex;align-items:center;justify-content:center;overflow:hidden;flex:0 0 180px;transform:translateY(6px);margin-left:auto}
+    .main{display:grid;grid-template-columns:1fr 340px;gap:16px;align-items:stretch}
     .map-card{background:var(--panel);border-radius:10px;padding:16px;min-height:420px;border:1px dashed rgba(0,0,0,0.06);position:relative;overflow:hidden}
     #map{position:absolute;left:12px;right:12px;top:12px;bottom:12px;border-radius:6px;background:#eaf5ea}
-    .right-col{display:flex;flex-direction:column;gap:12px}
-    .panel{background:var(--panel);border-radius:10px;padding:12px;border:1px solid rgba(0,0,0,0.04)}
+    .right-col{display:flex;flex-direction:column;gap:12px;height:100%}
+    .panel{background:var(--panel);border-radius:10px;padding:12px;border:1px solid rgba(0,0,0,0.04);flex:1}
     .panel h3{margin:0 0 8px 0;font-size:1rem;color:#334}
     .panel .content{color:var(--muted);font-size:13px;line-height:1.45;min-height:120px}
-    .bottom{display:grid;grid-template-columns:320px 1fr;gap:16px;margin-top:16px}
+    .bottom{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
     .legend{padding:12px}
     .key-title{ text-align:center; font-weight:700; font-size:0.95rem; color:#334; margin-bottom:6px; }
     .legend .row{display:flex;gap:10px;align-items:center;margin:10px 0}
     .swatch{width:22px;height:22px;border-radius:6px;border:1px solid rgba(0,0,0,0.06)}
+    .map-legend{position:absolute;bottom:25px;left:25px;background:rgba(255,255,255,0.92);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-radius:12px;padding:12px 16px;box-shadow:0 2px 12px rgba(0,0,0,0.12);z-index:1000;border:1px solid rgba(255,255,255,0.8);}
+    .map-legend .key-title{font-size:13px;font-weight:600;color:#555;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;}
+    .map-legend .row{margin:7px 0;display:flex;align-items:center;gap:10px;}
+    .map-legend .swatch{width:18px;height:18px;border-radius:5px;border:1px solid rgba(0,0,0,0.08);flex-shrink:0;}
+    .map-legend .muted{font-size:13px;color:#444;line-height:1.3;}
+    .info-tooltip{position:relative;display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;background:#e0e0e0;border-radius:50%;font-size:12px;font-weight:600;color:#555;cursor:help;margin-left:6px;}
+    .info-tooltip:hover{background:#d0d0d0;}
+    .info-tooltip .tooltip-text{visibility:hidden;opacity:0;position:absolute;top:130%;right:0;transform:none;width:260px;background:#333;color:#fff;font-size:12px;font-weight:400;line-height:1.4;padding:12px 14px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.2);z-index:100;transition:opacity 0.2s,visibility 0.2s;text-align:left;}
+    .info-tooltip .tooltip-text::after{content:'';position:absolute;bottom:100%;right:8px;border:6px solid transparent;border-bottom-color:#333;}
+    .info-tooltip:hover .tooltip-text{visibility:visible;opacity:1;}
+    /* Custom Slider Styles */
+    .sleek-slider{-webkit-appearance:none;appearance:none;width:100%;height:6px;background:linear-gradient(to right,#2596be 0%,#2596be var(--progress,0%),#e0e0e0 var(--progress,0%),#e0e0e0 100%);border-radius:3px;outline:none;cursor:pointer;transition:background 0.15s;}
+    .sleek-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:20px;height:20px;background:linear-gradient(135deg,#2596be 0%,#1a7a9e 100%);border-radius:50%;cursor:pointer;box-shadow:0 2px 8px rgba(37,150,190,0.4);transition:transform 0.15s,box-shadow 0.15s;border:3px solid #fff;}
+    .sleek-slider::-webkit-slider-thumb:hover{transform:scale(1.15);box-shadow:0 4px 12px rgba(37,150,190,0.5);}
+    .sleek-slider::-webkit-slider-thumb:active{transform:scale(1.1);box-shadow:0 2px 6px rgba(37,150,190,0.6);}
+    .sleek-slider::-moz-range-thumb{width:20px;height:20px;background:linear-gradient(135deg,#2596be 0%,#1a7a9e 100%);border-radius:50%;cursor:pointer;box-shadow:0 2px 8px rgba(37,150,190,0.4);transition:transform 0.15s,box-shadow 0.15s;border:3px solid #fff;}
+    .sleek-slider::-moz-range-thumb:hover{transform:scale(1.15);box-shadow:0 4px 12px rgba(37,150,190,0.5);}
+    .sleek-slider::-moz-range-track{height:6px;background:#e0e0e0;border-radius:3px;}
     .reviews-blob{position:relative;border-radius:18px;padding:22px;min-height:180px;background:linear-gradient(135deg,#9dc9e4 0%,#c084bd 50%,#f1a997 100%);box-shadow:0 10px 40px rgba(30,30,30,0.06);overflow:hidden}
-    .bubble{position:absolute;border-radius:14px;padding:10px 12px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,0.18);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);box-shadow:0 8px 24px rgba(0,0,0,0.06);font-size:13px;color:#ffffff}
+    .bubble{position:absolute;border-radius:14px;padding:10px 12px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,0.18);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);box-shadow:0 8px 24px rgba(0,0,0,0.06);font-size:13px;color:#ffffff;opacity:0;animation:floatInOut 8s ease-in-out infinite}
     .bubble .stars{color:#ffffff;font-weight:700;margin-bottom:6px;opacity:0.95}
-    .bubble.b1{left:18%;top:18%;width:220px}
-    .bubble.b2{left:60%;top:10%;width:160px}
-    .bubble.b3{left:35%;top:50%;width:200px}
-    .bubble.b4{left:75%;top:48%;width:140px}
-    .bubble.b5{left:58%;top:72%;width:180px}
-    .map-caption{position:absolute;left:24px;bottom:22px;background:rgba(255,255,255,0.95);padding:8px 10px;border-radius:8px;font-size:13px;color:#333;border:1px solid rgba(0,0,0,0.04)}
-    .map-status{position:absolute;left:22px;top:42px;z-index:1350;background:rgba(255,255,255,0.95);border:1px solid rgba(0,0,0,0.06);border-radius:10px;padding:6px 10px;font-size:12px;color:#223;box-shadow:0 6px 18px rgba(0,0,0,0.06);display:none;pointer-events:none}
+    .bubble.b1{left:18%;top:18%;width:220px;animation-delay:0s}
+    .bubble.b2{left:60%;top:10%;width:160px;animation-delay:1.5s}
+    .bubble.b3{left:35%;top:50%;width:200px;animation-delay:3s}
+    .bubble.b4{left:75%;top:48%;width:140px;animation-delay:4.5s}
+    .bubble.b5{left:58%;top:72%;width:180px;animation-delay:6s}
+    @keyframes floatInOut{
+      0%{opacity:0;transform:translateY(10px)}
+      15%{opacity:1;transform:translateY(0)}
+      85%{opacity:1;transform:translateY(0)}
+      100%{opacity:0;transform:translateY(-10px)}
+    }
+    .score-badge{position:relative;width:90px;height:90px;display:flex;align-items:center;justify-content:center}
+    .score-badge svg{position:absolute;width:100%;height:100%;transform:rotate(-90deg)}
+    .score-badge .bg-ring{fill:none;stroke:#e5e7eb;stroke-width:6}
+    .score-badge .progress-ring{fill:none;stroke:var(--muted);stroke-width:6;stroke-linecap:round;transition:stroke-dashoffset 0.6s ease,stroke 0.3s}
+    .score-number{font-size:28px;font-weight:700;color:var(--muted);z-index:1}
+    .map-caption{position:absolute;right:24px;top:22px;background:rgba(255,255,255,0.95);padding:8px 10px;border-radius:8px;font-size:13px;color:#333;border:1px solid rgba(0,0,0,0.04)}
+    .map-status{position:absolute;left:22px;top:400px;z-index:1350;background:rgba(255,255,255,0.95);border:1px solid rgba(0,0,0,0.06);border-radius:10px;padding:6px 10px;font-size:12px;color:#223;box-shadow:0 6px 18px rgba(0,0,0,0.06);display:none;pointer-events:none}
     .map-status.show{display:block}
     @media (max-width:980px){.main{grid-template-columns:1fr}.bottom{grid-template-columns:1fr}.right-col{order:2}.logo{width:120px;height:56px;flex:0 0 120px;transform:translateY(4px)}}
   </style>
@@ -77,25 +124,30 @@
     <header>
       <div class="search-wrap" role="search" aria-label="Search locations">
         <input class="search-input" placeholder="Search places (name, address)..." aria-label="Search field" />
-        <button class="search-btn">Search</button>
+        <button class="search-btn" aria-label="Search">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        </button>
         <div id="search-suggestions" class="search-suggestions" hidden aria-hidden="true"></div>
       </div>
 
-      <div class="filter-dropdown" title="Filter third-spaces">
-        <button id="filter-btn" class="filter-btn" aria-haspopup="true" aria-expanded="false">Filters ▾</button>
-        <div id="filter-menu" class="filter-menu" role="menu" aria-hidden="true">
-          <label role="menuitem"><input id="filter-cafes" type="checkbox" checked /> Cafes / Restaurants</label>
-          <label role="menuitem"><input id="filter-parks" type="checkbox" checked /> Parks / Open spaces</label>
-          <label role="menuitem"><input id="filter-libs" type="checkbox" checked /> Libraries / Public centres</label>
-          <hr style="margin:8px 0;border:none;border-top:1px solid rgba(0,0,0,0.06)"/>
-          <label role="menuitem"><input id="iso-toggle" type="checkbox" /> 10‑20 minute walking isochrone (click map)</label>
-        </div>
+      <div class="zip-wrap" title="Search by ZIP code">
+        <input id="zip-input" type="text" placeholder="ZIP code" aria-label="ZIP code" />
       </div>
 
-      <div class="zip-controls" title="Search by ZIP and radius">
-        <input id="zip-input" type="text" placeholder="ZIP code" aria-label="ZIP code" />
+      <div class="radius-wrap" title="Search radius in miles">
         <input id="radius-input" type="number" placeholder="Mile Radius" min="1" step="1" title="miles" aria-label="Radius in miles" />
-        <button id="apply-zip-btn" title="Apply ZIP+radius">Go</button>
+      </div>
+
+      <div class="filter-dropdown" title="Filter third-spaces">
+        <button id="filter-btn" class="filter-btn" aria-haspopup="true" aria-expanded="false">Select 3rd Place Type ▾</button>
+        <div id="filter-menu" class="filter-menu" role="menu" aria-hidden="true">
+          <label role="menuitem"><input id="filter-cafes" type="checkbox" /> Cafes / Restaurants</label>
+          <label role="menuitem"><input id="filter-parks" type="checkbox" /> Parks / Open spaces</label>
+          <label role="menuitem"><input id="filter-libs" type="checkbox" /> Libraries / Public centres</label>
+        </div>
       </div>
 
       <div class="logo" aria-hidden="true"><img src="assets/my_3rd_logo.svg" alt="my 3rd place" /></div>
@@ -104,32 +156,78 @@
     <div class="main">
       <div class="map-card" aria-label="Map area">
         <div id="map" aria-label="OpenStreetMap map"></div>
+        <div class="map-legend" aria-label="Legend">
+          <div class="key-title">Key</div>
+          <div class="row"><div class="swatch" style="background:var(--pin-other)"></div><div class="muted">Cafes, restaurants</div></div>
+          <div class="row"><div class="swatch" style="background:var(--pin-park)"></div><div class="muted">Open spaces, parks</div></div>
+          <div class="row"><div class="swatch" style="background:var(--pin-lib)"></div><div class="muted">Libraries, public centres</div></div>
+        </div>
         <div id="map-status" class="map-status" aria-hidden="true"></div>
         <div class="map-caption">Map</div>
       </div>
 
       <aside class="right-col" aria-label="Side panels">
-        <div class="panel">
-          <h3 id="wiki-title">Wiki Overview</h3>
-          <div id="wiki-overview" class="content">Click a place marker to see details and generated reviews.</div>
-        </div>
-
-        <div class="panel" style="min-height:160px;display:flex;flex-direction:column;justify-content:center;align-items:center;">
-          <h3 style="width:100%;text-align:left">Walkability Score</h3>
-          <div id="walkability-definition" style="font-size:25px;font-weight:800;color:#2e6b2f"></div>
-          <div id="walkability-desc" style="color:var(--muted);font-size:13px;line-height:1.45;margin-top:8px;text-align:left;max-width:320px">
-            We can define walkability as a combination of (1) the number of useful third places reachable within a 10-minute walk and (2) how connected the walking network is, estimated from the size and shape of the isochrone. More amenities and a larger, more compact isochrone produce a higher score.
+        <div class="panel" style="display:flex;flex-direction:column;align-items:center;">
+          <h3 style="width:100%;text-align:center;font-size:1.4rem;display:flex;align-items:center;justify-content:center;">
+            <span style="font-weight:500;">Testing Walkability</span>
+            <span class="info-tooltip" aria-label="What is an isochrone?">?<span class="tooltip-text"><strong>What is an isochrone?</strong><br>A shape on a map that shows everywhere you can reach within a set amount of time from a starting point.<br><br><strong>How it works:</strong><br>Walk Score is based on the clicked location. The slider controls the isochrone coverage area.</span></span>
+          </h3>
+          <div style="display:flex;gap:8px;align-items:center;margin:14px 0;">
+              <button id="iso-btn" class="iso-btn" title="Click to enable walkability mode, then click map">Start Walkability</button>
+          </div>
+          <div style="width:100%;margin:10px 0;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+              <span style="font-size:16px;color:var(--muted);">Walk time:</span>
+              <span id="iso-time-label" style="font-size:18px;font-weight:600;color:#334;">10 min</span>
+            </div>
+            <input type="range" id="iso-time" class="sleek-slider" min="300" max="3600" step="60" value="600" 
+                   style="width:100%;--progress:9.09%;" 
+                   title="Adjust walking time (5-60 minutes)">
+            <div style="display:flex;justify-content:space-between;font-size:14px;color:var(--muted);margin-top:4px;">
+              <span>5 min</span>
+              <span>60 min</span>
+            </div>
+          </div>
+          
+          <!-- Walk Score API section -->
+          <div id="walkscore-section" style="width:100%;margin-top:18px;padding-top:18px;border-top:1px solid rgba(0,0,0,0.06);">
+            <div style="height:12px;margin-bottom:12px;"></div>
+            <div style="font-size:13px;color:var(--muted);margin-bottom:10px;line-height:1.4;">Walk Score is based on the clicked location. The slider above controls the isochrone coverage area.</div>
+            <div style="display:flex;gap:24px;flex-wrap:wrap;justify-content:center;">
+              <div style="text-align:center;width:100px;">
+                <div class="score-badge" id="walkscore-walk-badge">
+                  <svg viewBox="0 0 100 100">
+                    <circle class="bg-ring" cx="50" cy="50" r="42"></circle>
+                    <circle class="progress-ring" id="walk-progress" cx="50" cy="50" r="42" stroke-dasharray="264" stroke-dashoffset="264"></circle>
+                  </svg>
+                  <div id="walkscore-walk" class="score-number">—</div>
+                </div>
+                <div style="font-size:17px;font-weight:600;color:#334;margin-top:8px;">Walk</div>
+                <div id="walkscore-walk-desc" style="font-size:12px;color:#999;font-style:italic;min-height:20px;"></div>
+              </div>
+              <div style="text-align:center;width:100px;">
+                <div class="score-badge" id="walkscore-bike-badge">
+                  <svg viewBox="0 0 100 100">
+                    <circle class="bg-ring" cx="50" cy="50" r="42"></circle>
+                    <circle class="progress-ring" id="bike-progress" cx="50" cy="50" r="42" stroke-dasharray="264" stroke-dashoffset="264"></circle>
+                  </svg>
+                  <div id="walkscore-bike" class="score-number">—</div>
+                </div>
+                <div style="font-size:17px;font-weight:600;color:#334;margin-top:8px;">Bike</div>
+                <div id="walkscore-bike-desc" style="font-size:12px;color:#999;font-style:italic;min-height:20px;"></div>
+              </div>
+            </div>
+            <div id="walkscore-hint" style="font-size:15px;color:var(--muted);margin-top:12px;font-style:italic;">Enable walkability and click on the map to see scores.</div>
+            <a id="walkscore-link" href="https://www.walkscore.com" target="_blank" rel="noopener" style="font-size:15px;color:#3b82f6;margin-top:10px;display:inline-block;">View on Walk Score →</a>
           </div>
         </div>
       </aside>
     </div>
 
     <div class="bottom">
-      <div class="legend panel" aria-label="Legend">
-        <div class="key-title">Key</div>
-        <div class="row"><div class="swatch" style="background:var(--pin-other)"></div><div class="muted">Cafes, restaurants</div></div>
-        <div class="row"><div class="swatch" style="background:var(--pin-park)"></div><div class="muted">Open spaces, parks</div></div>
-        <div class="row"><div class="swatch" style="background:var(--pin-lib)"></div><div class="muted">Libraries, public centres</div></div>
+      <div class="panel" style="flex:1;">
+  <h3 id="wiki-title"><span style="font-weight:500;">Wiki Overview</span></h3>
+        <div id="wiki-overview" class="content">Click a place marker to see details and generated reviews.</div>
       </div>
 
       <div class="reviews-blob" aria-label="Reviews area">
@@ -142,7 +240,7 @@
 
     <!-- TEMP: set ORS API key for local testing ONLY. Do not commit this to git -->
   <script>
-    window.ORS_API_KEY = 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6Ijg0N2MxMDlkYTBmNzQzNmNiZDlmMmUyM2JmOTIxOWZjIiwiaCI6Im11cm11cjY0In0=';
+    window.ORS_API_KEY = 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6Ijg1MmExZDEyNjNkYzQwN2NhZTVjYjEzMWY3NzkxMzU1IiwiaCI6Im11cm11cjY0In0=';
   </script>
 
 
@@ -163,7 +261,7 @@
     document.addEventListener('keydown',(e)=>{ if(e.key==='Escape'){ filterMenu.style.display='none'; filterBtn.setAttribute('aria-expanded','false'); filterMenu.setAttribute('aria-hidden','true'); }});
 
     // map
-    const map = L.map('map', { zoomControl:true }).setView([44.61, -106.00], 6);
+    const map = L.map('map', { zoomControl:true }).setView([39.83, -98.58], 4);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{ maxZoom:19, attribution:'&copy; OpenStreetMap contributors' }).addTo(map);
 
     // status
@@ -251,7 +349,7 @@
             // update right panel wiki + reviews
             const wikiTitleEl = document.getElementById('wiki-title');
             const wikiOverviewEl = document.getElementById('wiki-overview');
-            if(wikiTitleEl) wikiTitleEl.textContent = name;
+            if(wikiTitleEl) wikiTitleEl.innerHTML = `<span style=\"font-weight:500;\">${escapeHtml(name)}</span>`;
             if(wikiOverviewEl) wikiOverviewEl.innerHTML = `<div style="opacity:.8">Loading information for <strong>${escapeHtml(name)}</strong>…</div>`;
             // generate reviews synchronously
             updateReviewsPanel(name, category, el.tags);
@@ -260,9 +358,9 @@
             if(wiki && (wiki.extract_html || wiki.extract)){
               const html = wiki.extract_html || `<p>${escapeHtml(wiki.extract)}</p>`;
               const url = wiki.content_urls?.desktop?.page || `https://en.wikipedia.org/wiki/${encodeURIComponent(name)}`;
-              if(wikiOverviewEl) wikiOverviewEl.innerHTML = `<div style="font-size:15px"><strong>${escapeHtml(name)}</strong></div><div style="margin-top:8px;font-size:13px">${html}</div><div style="margin-top:8px"><a href="${escapeHtml(url)}" target="_blank" rel="noopener">Read more on Wikipedia</a></div>`;
+              if(wikiOverviewEl) wikiOverviewEl.innerHTML = `<div style=\"font-size:15px\"><span style=\"font-weight:500;\">${escapeHtml(name)}</span></div><div style=\"margin-top:8px;font-size:13px\">${html}</div><div style=\"margin-top:8px\"><a href=\"${escapeHtml(url)}\" target=\"_blank\" rel=\"noopener\">Read more on Wikipedia</a></div>`;
             } else {
-              if(wikiOverviewEl) wikiOverviewEl.innerHTML = `<div style="font-size:15px"><strong>${escapeHtml(name)}</strong></div><div style="margin-top:8px;font-size:13px">${formatTags(el.tags) || 'No additional summary available.'}</div>`;
+              if(wikiOverviewEl) wikiOverviewEl.innerHTML = `<div style=\"font-size:15px\"><span style=\"font-weight:500;\">${escapeHtml(name)}</span></div><div style=\"margin-top:8px;font-size:13px\">${formatTags(el.tags) || 'No additional summary available.'}</div>`;
             }
           });
         });
@@ -291,26 +389,49 @@
 
     // ZIP geocoding
     async function geocodeZip(zip){ const q=encodeURIComponent(zip+' USA'); const url=`https://nominatim.openstreetmap.org/search?format=json&countrycodes=us&q=${q}&limit=1`; const r=await fetch(url); if(!r.ok) return null; const a=await r.json(); if(!a||a.length===0) return null; return { lat:parseFloat(a[0].lat), lon:parseFloat(a[0].lon) }; }
-    const applyBtn = document.getElementById('apply-zip-btn'), clearBtn = document.getElementById('clear-zip-btn');
-    applyBtn.addEventListener('click', async ()=>{
-      const zip = document.getElementById('zip-input').value.trim(); const miles = parseFloat(document.getElementById('radius-input').value) || 10; if(!zip){ alert('Enter a ZIP code'); return; }
-       setStatus('Finding ZIP…'); const loc = await geocodeZip(zip); if(!loc){ setStatus(''); alert('ZIP not found'); return; }
-       searchCenter = loc; searchRadiusMeters = miles * 1609.34;
+    const clearBtn = document.getElementById('clear-zip-btn');
+    
+    // Apply ZIP/radius search function
+    async function applySearch(){
+      const zip = document.getElementById('zip-input').value.trim(); 
+      const miles = parseFloat(document.getElementById('radius-input').value) || 10;
+      
+      let loc = null;
+      
+      // Priority: 1) ZIP code if provided, 2) last search location, 3) current map center
+      if(zip) {
+        setStatus('Finding ZIP…'); 
+        loc = await geocodeZip(zip); 
+        if(!loc){ setStatus(''); alert('ZIP not found'); return; }
+      } else if(lastSearchLocation) {
+        loc = lastSearchLocation;
+      } else {
+        // Use current map center
+        const center = map.getCenter();
+        loc = { lat: center.lat, lon: center.lng };
+      }
+      
+      searchCenter = loc; 
+      searchRadiusMeters = miles * 1609.34;
       if(searchCircleLayer) searchCircleLayer.remove();
       searchCircleLayer = L.circle([loc.lat,loc.lon],{ radius: searchRadiusMeters, color:'#2e6b2f', weight:1, fill:false }).addTo(map);
       map.fitBounds(searchCircleLayer.getBounds(), { maxZoom:14, padding:[40,40] });
       clearAllPoiLayers();
       const jobs=[]; if(cbCafes.checked) jobs.push(fetchCategory('cafes')); if(cbParks.checked) jobs.push(fetchCategory('parks')); if(cbLibs.checked) jobs.push(fetchCategory('libs')); await Promise.allSettled(jobs);
       setStatus('');
-    });
-    if (clearBtn) {
-      clearBtn.addEventListener('click', async ()=>{ searchCenter=null; searchRadiusMeters=null; if(searchCircleLayer){ searchCircleLayer.remove(); searchCircleLayer=null; } map.setView([44.61, -106.00], 6); clearAllPoiLayers(); await refreshVisible(); });
     }
-
-    // center marker
-    const svgCenter = encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="32" height="40" viewBox="0 0 32 40"><path d="M16 0C9 0 4 5 4 11c0 8 12 24 12 24s12-16 12-24C28 5 23 0 16 0z" fill="#c084bd" stroke="#ffffff" stroke-width="2"/></svg>`);
-    const centerIcon = L.icon({ iconUrl:`data:image/svg+xml;utf8,${svgCenter}`, iconSize:[32,40], iconAnchor:[16,40], popupAnchor:[0,-36] });
-    L.marker([44.61,-106.00], { icon: centerIcon }).addTo(map).bindPopup('Map center: 44.61, -106.00');
+    
+    // Allow Enter key to trigger search from ZIP or radius inputs
+    document.getElementById('zip-input').addEventListener('keydown', (e) => {
+      if(e.key === 'Enter') { e.preventDefault(); applySearch(); }
+    });
+    document.getElementById('radius-input').addEventListener('keydown', (e) => {
+      if(e.key === 'Enter') { e.preventDefault(); applySearch(); }
+    });
+    
+    if (clearBtn) {
+      clearBtn.addEventListener('click', async ()=>{ searchCenter=null; searchRadiusMeters=null; if(searchCircleLayer){ searchCircleLayer.remove(); searchCircleLayer=null; } map.setView([39.83, -98.58], 4); clearAllPoiLayers(); await refreshVisible(); });
+    }
 
     // Isochrone: uses window.ORS_API_KEY (do not commit key)
     const apiKey = (window.ORS_API_KEY||'').trim();
@@ -405,48 +526,175 @@
 
     async function getWalkingIsochrone(lat,lng){
       if(!apiKey){ console.warn('ORS API key not set (window.ORS_API_KEY)'); alert('Isochrone key not set'); return; }
+      const timeSelect = document.getElementById('iso-time');
+      const walkTime = timeSelect ? parseInt(timeSelect.value, 10) : 600;
       const url = 'https://api.openrouteservice.org/v2/isochrones/foot-walking';
-      const body = { locations:[[lng,lat]], range:[600], range_type:'time' };
+      const body = { locations:[[lng,lat]], range:[walkTime], range_type:'time' };
       try{
         const res = await fetch(url, { method:'POST', headers:{ 'Authorization':apiKey,'Content-Type':'application/json' }, body: JSON.stringify(body) });
-        if(!res.ok){ const t=await res.text().catch(()=>res.statusText); console.warn('Isochrone failed',res.status,t); alert('Isochrone request failed'); return; }
+        if(!res.ok){ 
+          const t=await res.text().catch(()=>res.statusText); 
+          console.warn('Isochrone failed',res.status,t); 
+          if(res.status === 403) {
+            alert('API key invalid or expired. Please get a new key from openrouteservice.org');
+          } else if(res.status === 429) {
+            alert('API rate limit exceeded. Please try again later or get a new key.');
+          } else {
+            alert('Isochrone request failed: ' + res.status);
+          }
+          return; 
+        }
         const geo = await res.json();
         if(isochroneLayer){ isochroneLayer.remove(); isochroneLayer=null; }
-        isochroneLayer = L.geoJSON(geo, { style:{ color:'#3b82f6', weight:2, fillColor:'#3b82f6', fillOpacity:0.12 } }).addTo(map);
+        isochroneLayer = L.geoJSON(geo, { style:{ color:'#2596be', weight:2, fillColor:'#2596be', fillOpacity:0.25 } }).addTo(map);
         const b = isochroneLayer.getBounds(); if(b && b.isValid && b.isValid()) map.fitBounds(b, { padding:[20,20], maxZoom:15 });
 
-        // compute walkability and display it
-        const w = computeWalkabilityFromGeoJSON(geo);
-        const el = document.getElementById('walkability-definition');
-        if(el){
-          el.textContent = w.score;
-          // color by score ranges: 0-33 red, 34-66 orange, 67-79 yellow, 80-100 green
-          const s = Number(w.score) || 0;
-          let color = '#2e6b2f';
-          if(s <= 33) color = '#d9534f';       // red
-          else if(s <= 66) color = '#f39c12';  // orange
-          else if(s <= 79) color = '#f1c40f';  // yellow
-          else color = '#2ecc71';              // green
-          el.style.color = color;
-          el.title = `Score: ${w.score} — amenities: ${w.amenCount}, compactness: ${w.compactness}`;
-        }
+        // Fetch official Walk Score
+        fetchWalkScore(lat, lng);
 
-      }catch(e){ console.warn('Isochrone error',e); alert('Isochrone error — check console'); }
+      }catch(e){ console.warn('Isochrone error',e); alert('Isochrone error: ' + e.message); }
     }
-    let isoKeyMode=false; const isoCheckbox = document.getElementById('iso-toggle');
-    function setIsoMode(on){ isoKeyMode=Boolean(on); if(isoCheckbox) isoCheckbox.checked=isoKeyMode; map.getContainer().style.cursor = isoKeyMode ? 'crosshair' : ''; let hint=document.getElementById('iso-mode-note'); if(!hint){ hint=document.createElement('div'); hint.id='iso-mode-note'; hint.style.position='absolute'; hint.style.right='18px'; hint.style.top='18px'; hint.style.padding='8px 10px'; hint.style.background='rgba(255,255,255,0.95)'; hint.style.border='1px solid rgba(0,0,0,0.06)'; hint.style.borderRadius='10px'; hint.style.zIndex=1300; hint.style.fontSize='13px'; hint.textContent='Isochrone mode: click map to generate. Press W to exit.'; document.querySelector('.map-card').appendChild(hint); } hint.style.display = isoKeyMode ? 'block' : 'none'; }
+
+    // Walk Score API integration (requires proxy server running on localhost:3001)
+    async function fetchWalkScore(lat, lng) {
+      const section = document.getElementById('walkscore-section');
+      const walkEl = document.getElementById('walkscore-walk');
+      const walkDescEl = document.getElementById('walkscore-walk-desc');
+      const bikeEl = document.getElementById('walkscore-bike');
+      const bikeDescEl = document.getElementById('walkscore-bike-desc');
+      const logoEl = document.getElementById('walkscore-logo');
+      const linkEl = document.getElementById('walkscore-link');
+      const hintEl = document.getElementById('walkscore-hint');
+
+      // Reset display
+      if(walkEl) walkEl.textContent = '...';
+      if(bikeEl) bikeEl.textContent = '...';
+      if(hintEl) hintEl.style.display = 'none';
+
+      try {
+        // Reverse geocode to get address for Walk Score API
+        const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+        const geoData = await geoRes.json();
+        const address = geoData.display_name || `${lat},${lng}`;
+
+        // Call proxy server (run walkscore-proxy.js locally)
+        const proxyUrl = `http://localhost:3001/walkscore?lat=${lat}&lon=${lng}&address=${encodeURIComponent(address)}`;
+        const res = await fetch(proxyUrl);
+        const data = await res.json();
+
+        const walkProgress = document.getElementById('walk-progress');
+        const bikeProgress = document.getElementById('bike-progress');
+        const circumference = 2 * Math.PI * 42; // 264
+
+        if (data.status === 1) {
+          // Walk Score
+          if(walkEl) {
+            const walkScore = data.walkscore ?? 0;
+            walkEl.textContent = walkScore || '—';
+            const walkColor = getScoreColor(walkScore);
+            walkEl.style.color = walkColor;
+            if(walkProgress) {
+              const walkOffset = circumference - (walkScore / 100) * circumference;
+              walkProgress.style.strokeDashoffset = walkOffset;
+              walkProgress.style.stroke = walkColor;
+            }
+          }
+          if(walkDescEl) walkDescEl.textContent = data.description || '';
+
+          // Bike Score
+          if(data.bike && bikeEl) {
+            const bikeScore = data.bike.score ?? 0;
+            bikeEl.textContent = bikeScore || '—';
+            const bikeColor = getScoreColor(bikeScore);
+            bikeEl.style.color = bikeColor;
+            if(bikeProgress) {
+              const bikeOffset = circumference - (bikeScore / 100) * circumference;
+              bikeProgress.style.strokeDashoffset = bikeOffset;
+              bikeProgress.style.stroke = bikeColor;
+            }
+            if(bikeDescEl) bikeDescEl.textContent = data.bike.description || '';
+          } else if(bikeEl) {
+            bikeEl.textContent = 'N/A';
+            if(bikeDescEl) bikeDescEl.textContent = '';
+            if(bikeProgress) { bikeProgress.style.strokeDashoffset = circumference; }
+          }
+
+          // Logo and link
+          if(logoEl && data.logo_url) logoEl.src = data.logo_url;
+          if(linkEl && data.ws_link) linkEl.href = data.ws_link;
+
+        } else {
+          console.warn('Walk Score unavailable, status:', data.status);
+          if(walkEl) walkEl.textContent = '—';
+          if(bikeEl) bikeEl.textContent = '—';
+        }
+      } catch(e) {
+        console.warn('Walk Score fetch error:', e);
+        // Show section but indicate proxy not running
+        if(walkEl) walkEl.textContent = '—';
+        if(walkDescEl) walkDescEl.textContent = 'Proxy offline';
+        if(transitEl) transitEl.textContent = '—';
+        if(bikeEl) bikeEl.textContent = '—';
+      }
+    }
+
+    function getScoreColor(score) {
+      const s = Number(score) || 0;
+      if(s <= 33) return '#d9534f';      // red
+      if(s <= 66) return '#f39c12';      // orange
+      if(s <= 79) return '#f1c40f';      // yellow
+      return '#2ecc71';                  // green
+    }
+
+    let isoKeyMode=false; const isoBtn = document.getElementById('iso-btn');
+    let lastIsoCenter = null; // Store the last clicked location for real-time updates
+    
+    function setIsoMode(on){ isoKeyMode=Boolean(on); if(isoBtn){ isoBtn.classList.toggle('active', isoKeyMode); isoBtn.textContent = isoKeyMode ? 'Walkability ON — click map' : 'Test Walkability'; } map.getContainer().style.cursor = isoKeyMode ? 'crosshair' : ''; let hint=document.getElementById('iso-mode-note'); if(!hint){ hint=document.createElement('div'); hint.id='iso-mode-note'; hint.style.position='absolute'; hint.style.right='18px'; hint.style.top='18px'; hint.style.padding='8px 10px'; hint.style.background='rgba(255,255,255,0.95)'; hint.style.border='1px solid rgba(0,0,0,0.06)'; hint.style.borderRadius='10px'; hint.style.zIndex=1300; hint.style.fontSize='13px'; hint.textContent='Walkability mode: click map to generate. Press W or click button again to exit.'; document.querySelector('.map-card').appendChild(hint); } hint.style.display = isoKeyMode ? 'block' : 'none'; }
     document.addEventListener('keydown',(e)=>{ if(e.key && e.key.toLowerCase()==='w'){ const active=document.activeElement; const tag=active && active.tagName?active.tagName.toUpperCase():''; if(tag==='INPUT' || tag==='TEXTAREA' || active?.isContentEditable) return; setIsoMode(!isoKeyMode); e.preventDefault(); }});
-    map.on('click',(e)=>{ const enabled = (document.getElementById('iso-toggle')?.checked) || isoKeyMode; if(enabled) getWalkingIsochrone(e.latlng.lat,e.latlng.lng); });
-    if(isoCheckbox){ isoCheckbox.addEventListener('change',(ev)=>{ if(!ev.target.checked) setIsoMode(false); else setIsoMode(true); }); }
-    document.getElementById('iso-toggle').addEventListener('change',(ev)=>{ if(!ev.target.checked && isochroneLayer){ isochroneLayer.remove(); isochroneLayer=null; } });
+    map.on('click',(e)=>{ if(isoKeyMode){ lastIsoCenter = { lat: e.latlng.lat, lng: e.latlng.lng }; getWalkingIsochrone(e.latlng.lat,e.latlng.lng); } });
+    if(isoBtn){ isoBtn.addEventListener('click',()=>{ setIsoMode(!isoKeyMode); if(!isoKeyMode && isochroneLayer){ isochroneLayer.remove(); isochroneLayer=null; lastIsoCenter = null; } }); }
+
+    // Slider for walk time - updates label and regenerates isochrone in real-time
+    const isoTimeSlider = document.getElementById('iso-time');
+    const isoTimeLabel = document.getElementById('iso-time-label');
+    
+    // Function to update slider progress fill
+    function updateSliderProgress(slider) {
+      const min = parseFloat(slider.min);
+      const max = parseFloat(slider.max);
+      const val = parseFloat(slider.value);
+      const progress = ((val - min) / (max - min)) * 100;
+      slider.style.setProperty('--progress', progress + '%');
+    }
+    
+    if(isoTimeSlider && isoTimeLabel) {
+      // Initialize progress
+      updateSliderProgress(isoTimeSlider);
+      
+      // Update label and progress when slider changes
+      isoTimeSlider.addEventListener('input', (e) => {
+        const seconds = parseInt(e.target.value, 10);
+        const minutes = Math.round(seconds / 60);
+        isoTimeLabel.textContent = `${minutes} min`;
+        updateSliderProgress(e.target);
+      });
+      
+      // Regenerate isochrone when slider is released (to avoid too many API calls)
+      isoTimeSlider.addEventListener('change', (e) => {
+        if(lastIsoCenter) {
+          getWalkingIsochrone(lastIsoCenter.lat, lastIsoCenter.lng);
+        }
+      });
+    }
 
     // search autocomplete (Nominatim)
+    let lastSearchLocation = null; // Store the last searched location for radius functionality
     (function(){
       const input = document.querySelector('.search-input'); const sugEl = document.getElementById('search-suggestions');
       let items=[], active=-1, debounceTm=null, searchMarker=null;
       function hide(){ sugEl.hidden=true; sugEl.setAttribute('aria-hidden','true'); active=-1; items=[]; sugEl.innerHTML=''; }
       function showList(list){ items=list; active=-1; if(!list||list.length===0){ hide(); return; } sugEl.innerHTML = list.map((it,i)=>`<div class="item" data-i="${i}"><strong>${it.display_name.split(',')[0]}</strong><div style="opacity:.7;font-size:12px">${it.type||it.class||''}</div></div>`).join(''); sugEl.hidden=false; sugEl.setAttribute('aria-hidden','false'); }
-      function selectIndex(i){ const it=items[i]; if(!it) return; input.value = it.display_name.split(',')[0]; hide(); const lat=parseFloat(it.lat), lon=parseFloat(it.lon); if(!isFinite(lat)||!isFinite(lon)) return; if(searchMarker) searchMarker.remove(); searchMarker = L.marker([lat,lon]).addTo(map).bindPopup(it.display_name.split(',')[0]).openPopup(); map.setView([lat,lon],15); }
+      function selectIndex(i){ const it=items[i]; if(!it) return; input.value = it.display_name.split(',')[0]; hide(); const lat=parseFloat(it.lat), lon=parseFloat(it.lon); if(!isFinite(lat)||!isFinite(lon)) return; lastSearchLocation = { lat, lon }; if(searchMarker) searchMarker.remove(); searchMarker = L.marker([lat,lon]).addTo(map).bindPopup(it.display_name.split(',')[0]).openPopup(); map.setView([lat,lon],15); }
       function fetchSuggestions(q){ const url=`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=6&addressdetails=0&namedetails=0`; fetch(url).then(r=>r.json()).then(data=>showList(data||[])).catch(err=>{ console.warn('Autocomplete error',err); hide(); }); }
       input.addEventListener('input',(e)=>{ const q=e.target.value.trim(); clearTimeout(debounceTm); if(q.length<2){ hide(); return; } debounceTm=setTimeout(()=>fetchSuggestions(q),250); });
       input.addEventListener('keydown',(e)=>{ if(sugEl.hidden) return; const max = items.length-1; if(e.key==='ArrowDown'){ e.preventDefault(); active=Math.min(max,active+1); updateActive(); } else if(e.key==='ArrowUp'){ e.preventDefault(); active=Math.max(0,active-1); updateActive(); } else if(e.key==='Enter'){ e.preventDefault(); if(active>=0) selectIndex(active); } else if(e.key==='Escape'){ hide(); } });
@@ -460,4 +708,3 @@
   </script>
 </body>
 </html>
-
